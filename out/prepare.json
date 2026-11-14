@@ -1,0 +1,18 @@
+{
+  "coin": {
+    "name": "make.fun Ghost",
+    "symbol": "GHOST",
+    "description": "made for make.fun $1000 bounty"
+  },
+  "metadataUri": "https://files.catbox.moe/ryxczn.json",
+  "metadataSource": "catbox-https",
+  "metadata": {
+    "name": "make.fun Ghost",
+    "symbol": "GHOST",
+    "description": "made for make.fun $1000 bounty",
+    "image": "https://make.fun/press/mark-1024.png"
+  },
+  "imageSha256": "96ba54c48b6d8ea5bbfa4f199f0a2da1bd27b312a1094309c71f0bc02e0f8725",
+  "mint": "2sEvz1qTR4hSxYRPiHqbHunu64A66ERCoqiZRGakL1TZ",
+  "creator": "EeceLsEq3mVV1tqDzU8mGtgwKf5dra9CheNHKFTdm9ev"
+}
