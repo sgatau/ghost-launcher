@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tanda Tangan Synmerco</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; background: #0b1220; color: #e6edf3; }
+  .card { max-width: 560px; margin: 0 auto; background: #111a2e; border: 1px solid #233252; border-radius: 14px; padding: 20px; }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  p { font-size: 14px; line-height: 1.5; color: #b8c4d8; }
+  .status { font-size: 14px; font-weight: 600; padding: 10px 12px; border-radius: 8px; margin: 12px 0; }
+  .status.ok { background: #12351f; color: #7ee2a0; }
+  .status.bad { background: #3d1a1a; color: #ff9d9d; }
+  textarea { width: 100%; box-sizing: border-box; min-height: 150px; background: #0b1220; color: #e6edf3; border: 1px solid #233252; border-radius: 8px; padding: 10px; font-size: 13px; }
+  button { width: 100%; padding: 14px; font-size: 16px; font-weight: 700; border: 0; border-radius: 10px; background: #2dd4a7; color: #06281d; margin-top: 12px; cursor: pointer; }
+  button:disabled { opacity: .5; }
+  #sigBox { display: none; margin-top: 16px; }
+  #sig { word-break: break-all; background: #0b1220; border: 1px solid #233252; border-radius: 8px; padding: 10px; font-size: 13px; }
+  .hint { font-size: 13px; color: #8fa1bd; }
+  .free { background: #12351f; color: #7ee2a0; border-radius: 8px; padding: 10px 12px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Tanda Tangan Synmerco</h1>
+  <p>Supaya dompetmu terhubung sebagai dompet payout untuk agent-mu.</p>
+  <div class="free">Gratis &mdash; tanpa gas, tanpa transaksi, cuma tanda tangan pesan.</div>
+  <div id="walletStatus" class="status bad">Memeriksa dompet&hellip;</div>
+
+  <p><b>Langkah 1 &mdash; Periksa pesannya</b><br><span class="hint">Ini pesan persis yang akan kamu tandatangani. Pastikan alamat dompet di dalamnya adalah dompetmu.</span></p>
+  <textarea id="msg" placeholder="Tempel pesan Synmerco di sini..."></textarea>
+
+  <p><b>Langkah 2 &mdash; Hubungkan dompet &amp; tanda tangan</b></p>
+  <button id="signBtn">Hubungkan Dompet &amp; Tanda Tangan</button>
+
+  <div id="sigBox">
+    <p><b>Tanda tanganmu:</b></p>
+    <div id="sig"></div>
+    <button id="copyBtn">Salin Tanda Tangan</button>
+    <p class="hint">Salin tanda tangan ini dan kirim ke Pax, nanti Pax yang meneruskannya ke Synmerco.</p>
+  </div>
+
+  <p id="err" class="hint" style="color:#ff9d9d"></p>
+  <p class="hint">Kalau dompet tidak terdeteksi, buka halaman ini dari browser di dalam aplikasi dompetmu (MetaMask / Trust Wallet / Binance Web3), bukan dari Chrome biasa.</p>
+</div>
+<script>
+  var statusEl = document.getElementById('walletStatus');
+  var msgEl = document.getElementById('msg');
+  var errEl = document.getElementById('err');
+
+  function refreshStatus() {
+    if (window.ethereum) {
+      statusEl.textContent = 'Dompet terdeteksi. Siap tanda tangan.';
+      statusEl.className = 'status ok';
+    } else {
+      statusEl.textContent = 'Dompet tidak terdeteksi. Buka halaman ini dari browser di dalam aplikasi dompetmu.';
+      statusEl.className = 'status bad';
+    }
+  }
+  refreshStatus();
+  setTimeout(refreshStatus, 1000);
+  setTimeout(refreshStatus, 3000);
+
+  // Isi pesan dari ?msg=
+  try {
+    var q = new URLSearchParams(window.location.search);
+    var m = q.get('msg');
+    if (m) msgEl.value = m;
+  } catch (e) {}
+
+  function toHex(str) {
+    var bytes = new TextEncoder().encode(str);
+    var hex = '0x';
+    for (var i = 0; i < bytes.length; i++) hex += bytes[i].toString(16).padStart(2, '0');
+    return hex;
+  }
+
+  document.getElementById('signBtn').addEventListener('click', async function () {
+    errEl.textContent = '';
+    var msg = msgEl.value.trim();
+    if (!msg) { errEl.textContent = 'Tempel dulu pesannya di kotak atas.'; return; }
+    refreshStatus();
+    if (!window.ethereum) {
+      errEl.textContent = 'Dompet tidak terdeteksi di browser ini. Buka halaman ini dari browser di dalam aplikasi dompetmu.';
+      return;
+    }
+    var btn = document.getElementById('signBtn');
+    btn.disabled = true;
+    btn.textContent = 'Meminta tanda tangan...';
+    try {
+      var accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      var account = accounts[0];
+      var sig = await window.ethereum.request({
+        method: 'personal_sign',
+        params: [toHex(msg), account]
+      });
+      document.getElementById('sig').textContent = sig;
+      document.getElementById('sigBox').style.display = 'block';
+      btn.textContent = 'Selesai';
+    } catch (e) {
+      errEl.textContent = 'Gagal: ' + (e && e.message ? e.message : e);
+      btn.disabled = false;
+      btn.textContent = 'Hubungkan Dompet & Tanda Tangan';
+    }
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', async function () {
+    var sig = document.getElementById('sig').textContent;
+    try { await navigator.clipboard.writeText(sig); this.textContent = 'Disalin!'; }
+    catch (e) {
+      var ta = document.createElement('textarea');
+      ta.value = sig; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); this.textContent = 'Disalin!'; } catch (e2) {}
+      document.body.removeChild(ta);
+    }
+  });
+</script>
+</body>
+</html>
