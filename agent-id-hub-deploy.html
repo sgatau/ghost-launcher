@@ -88,7 +88,7 @@ document.getElementById('deployBtn').onclick = async () => {
     btn.disabled = true;
     st.textContent = 'Mengirim transaksi deploy... konfirmasi di wallet kamu.';
     const factory = new ethers.ContractFactory(ABI, BYTECODE, signer);
-    const contract = await factory.deploy(REGISTRY, BASE_URI);
+    const contract = await factory.deploy(REGISTRY, BASE_URI, { gasLimit: 3000000 });
     st.textContent = 'Transaksi terkirim: ' + contract.deployTransaction.hash + '. Menunggu konfirmasi...';
     await contract.deployed();
     const addr = contract.address;
